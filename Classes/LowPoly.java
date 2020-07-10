@@ -511,7 +511,7 @@ class AiProgram extends JPanel {
             }
             //wallLines
             //System.out.println(counter);
-            System.out.println("Number Of Empty Pixels "+((count())/((double)((currentImage.length * currentImage[0].length)))));
+            System.out.println("Number Of Empty Pixels "+(1.0-((count())/((double)((currentImage.length * currentImage[0].length)))))) + "%";
             //repaint();
           }
           /*

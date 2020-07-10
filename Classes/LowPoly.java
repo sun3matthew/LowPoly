@@ -476,6 +476,16 @@ class AiProgram extends JPanel {
     */
     class BallMover implements ActionListener {
         public void actionPerformed(ActionEvent e) {
+          if(count() <= 300)
+          {
+            for(int row = 0; row < currentImage.length; row++)
+              for(int col = 0; col < currentImage[0].length; col++)
+                if(currentImage[row][col] == null)
+                  currentImage[row][col] = new Pixel();
+            Image newPicture = new Image(currentImage);
+            newPicture.exportImage(exportPath+"OutputImg");
+            System.exit(0);
+          }
           for(int repeat = 0; repeat < 100; repeat++)
           {
             counter++;

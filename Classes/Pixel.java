@@ -2,9 +2,9 @@ import java.awt.Color;
 
 public class Pixel
 {
-  int r;
-  int g;
-  int b;
+  public int r;
+  public int g;
+  public int b;
   public Pixel()
   {
     r = 0;

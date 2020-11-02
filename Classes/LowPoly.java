@@ -1,9 +1,5 @@
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.Color;
-import java.io.*;
 import java.util.ArrayList;
-import javax.swing.*;
+import java.io.File;
 
 
 /*
@@ -33,40 +29,27 @@ Since: May 31 2020
 The main class to setup java GUI
 */
 public class LowPoly {
-    JFrame frame;
-    AiProgram canvas;
     public static void main(String[] args) {
         String folderName = "Lofi";
         if (args.length > 0)
             folderName = args[0];
-        LowPoly kt = new LowPoly();
-        kt.Run(folderName);
-    }
-
-    public void Run(String name) {
-        frame = new JFrame("LowPoly");
-        frame.setSize(1050, 1050);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setResizable(true);
-        canvas = new AiProgram(name);
-        frame.getContentPane().add(canvas);
-
-        frame.setVisible(true);
+        new AiProgram(folderName);
     }
 }
 
 /*
 The the class the runs the program
 */
-class AiProgram extends JPanel {
+class AiProgram{
 
     Pixel[][] currentImage;
     Pixel[][] wallLines;
     Pixel[][] colorImage;
     boolean[][] doneOnes;
 
+    boolean doneP1;
+
     ArrayList < Line > lines;
-    private Timer balltimer;
 
     private int counter;
 
@@ -99,11 +82,59 @@ class AiProgram extends JPanel {
         wallLines = new Pixel[colorImage.length][colorImage[0].length];
         doneOnes = new boolean[colorImage.length][colorImage[0].length];
         testAmt = 30;
-        lines = new ArrayList < Line > ();
+        lines = new ArrayList <Line>();
         edgeDetection();
-        BallMover ballmover = new BallMover();
-        balltimer = new Timer(3000, ballmover); //
-        balltimer.start();
+        wallLines = cloneArray(currentImage);
+        currentImage = new Pixel[colorImage.length][colorImage[0].length];
+        for(int row = 0; row < currentImage.length; row++)
+        {
+          for(int col = 0; col < currentImage[0].length; col++)
+          {
+            if(currentImage[row][col] == null && wallLines[row][col] == null)
+            {
+              currentImage[row][col] = colorImage[row][col];
+              boolean changed = true;
+              //int coiunter = 0;
+              while(changed)
+              {
+                //System.out.println("Count " + coiunter);
+                //coiunter++;
+                changed = false;
+                for(int rowS = row; rowS < currentImage.length; rowS++)
+                  for(int colS = 0; colS < currentImage[0].length; colS++)
+                  {
+                    if(currentImage[rowS][colS] != null && !doneOnes[rowS][colS] && wallLines[rowS][colS] == null)
+                    {
+                      if(canFillPixl(rowS-1, colS))
+                        currentImage[rowS-1][colS] = currentImage[row][col];
+                      if(canFillPixl(rowS+1, colS))
+                        currentImage[rowS+1][colS] = currentImage[row][col];
+                      if(canFillPixl(rowS, colS-1))
+                        currentImage[rowS][colS-1] = currentImage[row][col];
+                      if(canFillPixl(rowS, colS+1))
+                        currentImage[rowS][colS+1] = currentImage[row][col];
+                      doneOnes[rowS][colS] = true;
+                      changed = true;
+                    }
+                  }
+                //System.out.println(count() +  "ZCX");
+
+              }
+              //System.out.println("tested");
+              System.out.println(("Number Of Empty Pixels "+(int)(100*(1.0-((count())/((double)((currentImage.length * currentImage[0].length)))))) + "%\t\t" + counter + "\t\t" + count()));
+            }
+          }
+          //System.out.println("New Row");
+          //System.out.println("Number Of Empty PixelsASDASDASD "+(int)(100*(1.0-((count())/((double)((currentImage.length * currentImage[0].length)))))) + "%\t\t" + counter + "\t\t" + count());
+          //if(row % 1000 == 0)
+        }
+        for(int row = 0; row < currentImage.length; row++)
+          for(int col = 0; col < currentImage[0].length; col++)
+            if(currentImage[row][col] == null)
+              currentImage[row][col] = colorImage[row][col];
+        Image newPicture = new Image(currentImage);
+        newPicture.exportImage(exportPath+"OutputImg");
+        System.exit(0);
     }
     public void edgeDetection() {
         System.out.println("TEST: " + currentImage.length + ", " + currentImage[0].length);
@@ -449,15 +480,14 @@ class AiProgram extends JPanel {
             while (x2 < lines.get(i).x1) {
                 //System.out.println((int)x2 + ", " + (int)y2);
                 if (inBounds(currentImage.length - (int) y2, (int) x2))
-                    currentImage[currentImage.length - (int) y2][(int) x2] = new Pixel(0, 0, 0); //currentImage.length-
+                    currentImage[currentImage.length - (int) y2][(int) x2] = colorImage[currentImage.length - (int)lines.get(i).centerY][(int)lines.get(i).centerX];//new Pixel(0, 0, 0); //currentImage.length-
                 x2 += 0.0003;
                 y2 += 0.0003 * lines.get(i).slope;
             }
         }
     }
+
     private boolean allDone() {
-        //for(int i = 0; i < lines.size(); i++)
-        //System.out.println(lines.get(i).finished1 + ", " + lines.get(i).finished2);
         for (int i = 0; i < lines.size(); i++)
             if (!lines.get(i).finished1 || !lines.get(i).finished2)
                 return false;
@@ -474,91 +504,14 @@ class AiProgram extends JPanel {
     /*
     The "update function"
     */
-    class BallMover implements ActionListener {
-        public void actionPerformed(ActionEvent e) {
-          if(count() <= 300)
-          {
-            for(int row = 0; row < currentImage.length; row++)
-              for(int col = 0; col < currentImage[0].length; col++)
-                if(currentImage[row][col] == null)
-                  currentImage[row][col] = new Pixel();
-            Image newPicture = new Image(currentImage);
-            newPicture.exportImage(exportPath+"OutputImg");
-            System.exit(0);
-          }
-          for(int repeat = 0; repeat < 100; repeat++)
-          {
-            counter++;
-            for (int randTest = 0; randTest < (currentImage.length * currentImage[0].length) / 1.5; randTest++) {
-                int row = randomWithRange(0, currentImage.length - 1);
-                int col = randomWithRange(0, currentImage[0].length - 1);
-                //System.out.println(doneOnes[row][col]);
-                if (currentImage[row][col] != null) {
-                    int numBabies = ((80 - currentImage[row][col].comparePixel(colorImage[row][col])) / 10) + (counter / 100);
-                    if (numBabies < 0)
-                        numBabies = 0;
-                    int babyCounter = 0;
-                    for (int i = 1; i <= numBabies; i++) {
-                        int babyRange = 1;
-                        int checkCol = randomWithRange(-1 * babyRange + col, babyRange + col);//currentAlive[checkRow][checkCol] == null
-                        int checkRow = randomWithRange(-1 * babyRange + row, babyRange + row);//&& checkCol != col && checkRow != row &&
-                        if (inBounds(checkRow, checkCol) && currentImage[checkRow][checkCol] == null) {
-                            babyCounter++;
-                            currentImage[checkRow][checkCol] = geiWoBaby(currentImage[row][col], babyCounter);
-                        }
-                    }
-                }
-            }
-            //wallLines
-            //System.out.println(counter);
-            System.out.println("Number Of Empty Pixels "+(int)(100*(1.0-((count())/((double)((currentImage.length * currentImage[0].length)))))) + "%");
-            //repaint();
-          }
-          /*
-          for (int row = 0; row < doneOnes.length; row++) {
-              for (int col = 0; col < doneOnes[0].length; col++) {
-                if(!doneOnes[row][col] && currentImage[row][col] != null)
-                {
-                  boolean temp = false;
-                  for(int rowT = row - 1; rowT <= row + 1 && !temp; rowT++)
-                  {
-                    for(int colT = col - 1; colT <= col + 1 && !temp; colT++)
-                    {
-                      if(inBounds(rowT, colT) && currentImage[rowT][colT] == null)
-                      {
-                        temp = true;
-                      }
-                    }
-                  }
-                  if(temp)
-                  {
-                    doneOnes[row][col] = true;
-                  }
-                }
-              }
-            }*/
-          repaint();
-        }
+    public boolean canFillPixl(int row, int col)
+    {
+      return(inBounds(row, col) && currentImage[row][col] == null);
     }
-
     public Pixel geiWoBaby(Pixel parent, int mutationAmount) {
-        mutationAmount = (int) Math.pow(2, mutationAmount);
+        //mutationAmount = (int) Math.pow(2, mutationAmount);
+        mutationAmount = 0;
         return new Pixel(parent.r + randomWithRange(-1 * mutationAmount, mutationAmount), parent.g + randomWithRange(-1 * mutationAmount, mutationAmount), parent.b + randomWithRange(-1 * mutationAmount, mutationAmount));
-    }
-    /*
-    This method draws the pixels on screen
-    */
-    public void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        for (int row = 0; row < currentImage.length; row++)
-            for (int col = 0; col < currentImage[0].length; col++) {
-                if (currentImage[row][col] != null) {
-                    g.setColor(currentImage[row][col].getColor());
-                } else {
-                    g.setColor(Color.BLACK);
-                }
-                g.drawLine(col, row, col, row);
-            }
     }
     public int count() {
         int counter = 0;

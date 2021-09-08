@@ -204,6 +204,7 @@ class AiProgram{
                 grayscale[row][col] = new Pixel(avg, avg, avg);
             }
         }
+        exportImg(grayscale, "grayscale");
         //currentImage = new Pixel[colorImage.length][colorImage[0].length];
         Pixel[][] gauss = new Pixel[colorImage.length][colorImage[0].length];
         for (int row = 0; row < currentImage.length; row++) {
@@ -223,6 +224,7 @@ class AiProgram{
                 //currentImage[row][col] = grayscale[row][col];
             }
         }
+        exportImg(gauss, "gauss");
         int[][] sobelX = new int[][] {
             {
                 1,
@@ -274,6 +276,7 @@ class AiProgram{
                 //currentImage[row][col] = grayscale[row][col];
             }
         }
+        exportImg(sobel, "sobel");
         Pixel[][] edge = new Pixel[colorImage.length][colorImage[0].length];
         for (int row = 0; row < currentImage.length; row++) {
             for (int col = 0; col < currentImage[0].length; col++) {
@@ -289,6 +292,7 @@ class AiProgram{
                 }
             }
         }
+        exportImg(edge, "edge1");
         int high = 200;
         int low = 30;
         for (int row = 0; row < currentImage.length; row++) {
@@ -298,6 +302,7 @@ class AiProgram{
                 }
             }
         }
+        exportImg(edge, "edge2");
 
         int lineLen = currentImage[0].length / 150;
         Pixel[][] points = new Pixel[colorImage.length][colorImage[0].length];
@@ -335,6 +340,7 @@ class AiProgram{
                 }
             }
         }
+        exportImg(points, "points1");
         for (int row = 0; row < points.length; row++) {
             for (int col = 0; col < points[0].length; col++) {
                 if (points[row][col] != null) {
@@ -361,6 +367,7 @@ class AiProgram{
                 }
             }
         }
+        exportImg(points, "points2");
         //currentImage = new Pixel[colorImage.length][colorImage[0].length];
         for (int row = 0; row < points.length; row++) {
             for (int col = 0; col < points[0].length; col++) {
@@ -431,6 +438,7 @@ class AiProgram{
                 y2 += 0.0003 * lines.get(i).slope;
             }
         }
+        exportImg(currentImage, "currentImage");
         int multCounter = 0;
         System.out.println("MaxLen " + Math.sqrt(Math.pow(currentImage.length, 2) + Math.pow(currentImage[0].length, 2)));
         while (!allDone()) {
@@ -471,6 +479,8 @@ class AiProgram{
                 }
             }
         }
+
+        exportImg(currentImage, "currentImage2");
         System.out.println(multCounter);
         currentImage = new Pixel[colorImage.length][colorImage[0].length];
         for (int i = 0; i < lines.size(); i++) {
@@ -529,4 +539,14 @@ class AiProgram{
                 newArray[row][col] = cloneThis[row][col];
         return newArray;
     }
+
+    private void exportImg(Pixel[][] exp, String name){
+        Pixel[][] expImgClone = cloneArray(exp);
+        for (int row = 0; row < expImgClone.length; row++)
+            for (int col = 0; col < expImgClone[0].length; col++)
+                if(expImgClone[row][col] == null)    
+                    expImgClone[row][col] = new Pixel();
+        Image newPicture = new Image(expImgClone);
+        newPicture.exportImage(exportPath+name);
+}
 }
